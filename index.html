@@ -1,0 +1,2912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wedding Invitation Editor</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Great+Vibes&family=Charm:wght@400;700&family=Dancing+Script:wght@400;700&family=Pacifico&family=Satisfy&family=Lobster&family=Sacramento&family=Tangerine:wght@400;700&family=Amatic+SC:wght@400;700&family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,700;1,400&family=Lora:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&family=Raleway:wght@300;400;500;600&family=Rouge+Script&family=Alex+Brush&family=Allura&family=Petit+Formal+Script&family=Pinyon+Script&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #333;
+            --border-color: #e0e0e0;
+            --background-color: #f8f8f8;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background-color);
+            min-height: 100vh;
+        }
+
+        
+        .top-nav {
+            height: 60px;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .nav-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .nav-center {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn, .undo-btn, .redo-btn {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+
+        .save-btn {
+            padding: 8px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .download-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 20px;
+            background: #333;
+            color: white;
+            cursor: pointer;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 250px 1fr 300px;
+            gap: 20px;
+            padding: 20px;
+            height: calc(100vh - 60px);
+        }
+
+      
+        .left-sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .page-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .page-item {
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .page-item.active {
+            border-color: #4a90e2;
+            background: #f0f7ff;
+        }
+
+        .page-item img {
+            width: 100%;
+            aspect-ratio: 3/4;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-bottom: 5px;
+        }
+
+        .customize-btn {
+            padding: 10px;
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            margin-top: auto;
+        }
+
+        .editor-area {
+            background: white;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .page-content {
+            flex: 1;
+            background: linear-gradient(180deg, #f3d367 0%, #90a955 100%);
+            margin: 20px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .nav-arrow:hover {
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .nav-arrow.prev {
+            left: 10px;
+        }
+
+        .nav-arrow.next {
+            right: 10px;
+        }
+
+        .nav-arrow i {
+            font-size: 20px;
+            color: #333;
+        }
+
+        /* Show arrows when there are multiple slides */
+        .editor-area.multiple-slides .nav-arrow {
+            display: flex;
+        }
+
+        .text-box {
+            position: absolute;
+            min-width: 50px;
+            padding: 10px;
+            cursor: move;
+            background: transparent;
+            user-select: none;
+        }
+
+        .text-box p {
+            margin: 0;
+            padding: 0;
+            cursor: text;
+            background: transparent !important;
+            user-select: text;
+        }
+
+        .text-box.selected {
+            outline: none;
+        }
+
+        .handle {
+            position: absolute;
+            width: 20px;
+            height: 100%;
+            top: 0;
+            background: transparent;
+            cursor: ew-resize;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .text-box:hover .handle,
+        .text-box.selected .handle {
+            opacity: 1;
+        }
+
+        .handle.left {
+            left: -10px;
+        }
+
+        .handle.right {
+            right: -10px;
+        }
+
+        .resize-handle {
+            position: absolute;
+            right: -10px;
+            bottom: -10px;
+            width: 20px;
+            height: 20px;
+            cursor: se-resize;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .text-box:hover .resize-handle,
+        .text-box.selected .resize-handle {
+            opacity: 1;
+        }
+
+        .lantern-icon {
+            position: absolute;
+            bottom: 50px;
+            width: 150px;
+            height: 150px;
+            background-image: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"%3E%3Cpath fill="%23ffffff" d="M12 2c3 0 5 2 5 5v3H7V7c0-3 2-5 5-5zM5 12h14v8c0 1.1-.9 2-2 2H7c-1.1 0-2-.9-2-2v-8z"/%3E%3C/svg%3E');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+
+        .page-dots {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            padding: 10px;
+        }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ddd;
+        }
+
+        .dot.active {
+            background: #666;
+        }
+
+        /* Right Sidebar */
+        .right-sidebar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .right-sidebar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .right-sidebar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 3px;
+        }
+
+        .right-sidebar::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 3px;
+        }
+
+        .right-sidebar::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            background: #f8f8f8;
+        }
+
+        .sidebar-header h3 {
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .edit-section {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .section-title {
+            font-size: 14px;
+            font-weight: 500;
+            color: #666;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group {
+            margin-bottom: 15px;
+        }
+
+        .control-group label {
+            display: block;
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .text-controls {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .control-item {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .number-input {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .number-input input {
+            width: 100%;
+            padding: 8px;
+            padding-right: 30px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+        }
+
+        .number-input .unit {
+            position: absolute;
+            right: 8px;
+            color: #666;
+            font-size: 12px;
+        }
+
+        .color-picker {
+            position: relative;
+        }
+
+        .current-color {
+            width: 100%;
+            height: 36px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: #800000;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .current-color:hover {
+            border-color: var(--secondary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .color-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: white;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 8px;
+            margin-top: 5px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .color-option {
+            width: 100%;
+            aspect-ratio: 1;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 1px solid var(--border-color);
+            transition: all 0.2s ease;
+        }
+
+        .color-option:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-color: var(--secondary-color);
+        }
+
+        .alignment-controls, .line-height-controls {
+            display: flex;
+            gap: 5px;
+        }
+
+        .align-btn, .line-height-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .align-btn:hover, .line-height-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .align-btn.active, .line-height-btn.active {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+
+        .animation-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+            cursor: pointer;
+        }
+
+        .text-input {
+            width: 100%;
+            min-height: 100px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            resize: vertical;
+            font-family: inherit;
+            line-height: 1.5;
+        }
+
+        .align-btn, .line-height-btn, select, input, .current-color {
+            transition: all 0.2s ease;
+        }
+
+        .align-btn:hover, .line-height-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        select:hover, input:hover, .current-color:hover {
+            border-color: var(--secondary-color);
+        }
+
+        .zoom-control {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #zoom-slider {
+            width: 200px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: white;
+        }
+
+        .sidebar-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .action-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .action-btn:hover {
+            background: #f8f8f8;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-btn .icon {
+            font-size: 18px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f8f8;
+            border-radius: 4px;
+        }
+
+        .add-text-btn .icon {
+            color: #4a90e2;
+        }
+
+        .add-image-btn .icon {
+            color: #43a047;
+        }
+
+        .color-picker-container {
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 8px;
+        }
+
+        .predefined-colors {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .color-btn {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .color-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .color-btn.active {
+            outline: 2px solid #2196f3;
+            outline-offset: 1px;
+        }
+
+        .custom-color-picker {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+
+        .custom-color-picker input[type="color"] {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .custom-color-picker label {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .color-picker-container {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 15px;
+        }
+
+        .color-categories {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .category {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .category-label {
+            font-size: 12px;
+            color: #666;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .color-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .color-btn {
+            width: 30px;
+            height: 30px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .color-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .color-btn.active {
+            outline: 2px solid #2196f3;
+            outline-offset: 2px;
+        }
+
+        .custom-color-section {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .custom-color-picker {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding: 10px;
+            background: #f8f8f8;
+            border-radius: 6px;
+        }
+
+        .color-preview {
+            width: 40px;
+            height: 40px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
+
+        .color-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .color-hex {
+            font-family: monospace;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .apply-color-btn {
+            padding: 4px 12px;
+            background: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: background 0.2s;
+        }
+
+        .apply-color-btn:hover {
+            background: #1976d2;
+        }
+
+        #fontFamily {
+            font-size: 16px;
+            padding: 8px 12px;
+        }
+
+        #fontFamily option {
+            font-size: 16px;
+            padding: 8px;
+        }
+
+        #fontFamily option[value="Charm"] { font-family: 'Charm', cursive; }
+        #fontFamily option[value="Great Vibes"] { font-family: 'Great Vibes', cursive; }
+        #fontFamily option[value="Playfair Display"] { font-family: 'Playfair Display', serif; }
+        #fontFamily option[value="Dancing Script"] { font-family: 'Dancing Script', cursive; }
+        #fontFamily option[value="Pacifico"] { font-family: 'Pacifico', cursive; }
+        #fontFamily option[value="Satisfy"] { font-family: 'Satisfy', cursive; }
+        #fontFamily option[value="Lobster"] { font-family: 'Lobster', cursive; }
+        #fontFamily option[value="Sacramento"] { font-family: 'Sacramento', cursive; }
+        #fontFamily option[value="Tangerine"] { font-family: 'Tangerine', cursive; }
+        #fontFamily option[value="Amatic SC"] { font-family: 'Amatic SC', cursive; }
+        #fontFamily option[value="Cinzel"] { font-family: 'Cinzel', serif; }
+        #fontFamily option[value="Cormorant Garamond"] { font-family: 'Cormorant Garamond', serif; }
+        #fontFamily option[value="Lora"] { font-family: 'Lora', serif; }
+        #fontFamily option[value="Montserrat"] { font-family: 'Montserrat', sans-serif; }
+        #fontFamily option[value="Raleway"] { font-family: 'Raleway', sans-serif; }
+        #fontFamily option[value="Rouge Script"] { font-family: 'Rouge Script', cursive; }
+        #fontFamily option[value="Alex Brush"] { font-family: 'Alex Brush', cursive; }
+        #fontFamily option[value="Allura"] { font-family: 'Allura', cursive; }
+        #fontFamily option[value="Petit Formal Script"] { font-family: 'Petit Formal Script', cursive; }
+        #fontFamily option[value="Pinyon Script"] { font-family: 'Pinyon Script', cursive; }
+
+        .image-upload-input {
+            display: none;
+        }
+
+        .text-box img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            pointer-events: none; 
+            user-select: none;
+        }
+
+        .text-box.image-box {
+            padding: 0;
+            background: transparent;
+            cursor: move;
+        }
+
+        .text-box.image-box .handle,
+        .text-box.image-box .resize-handle {
+            z-index: 10;
+        }
+
+     
+        .delete-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: white;
+            color: #333;
+            border-radius: 50%;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            border: 1px solid #ddd;
+            z-index: 1000;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .delete-btn i {
+            font-size: 12px;
+        }
+
+        .text-box:hover .delete-btn {
+            display: flex;
+        }
+
+        .delete-btn:hover {
+            background: #f8f8f8;
+            color: #000;
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav">
+        <div class="nav-left">
+            <button class="back-btn">← Back</button>
+            <span>Untitled Video</span>
+        </div>
+        <div class="nav-center">
+            <button class="undo-btn">↶</button>
+            <button class="redo-btn">↷</button>
+        </div>
+        <div class="nav-right">
+            <button class="save-btn">Save</button>
+            <button class="download-btn">Download ↓</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div class="left-sidebar">
+            <div class="page-list">
+                <div class="page-item active">
+                    <img src="https://via.placeholder.com/150x200" alt="Page 1">
+                    <p>Page 1</p>
+                </div>
+            </div>
+            <button class="customize-btn">+ Add Slide</button>
+            <div class="sidebar-actions">
+                <button class="action-btn add-text-btn">
+                    <span class="icon">+</span>
+                    Add Text
+                </button>
+                <button class="action-btn add-image-btn">
+                    <span class="icon">+</span>
+                    Add Image
+                </button>
+                <input type="file" class="image-upload-input" accept="image/*">
+            </div>
+        </div>
+
+        <div class="editor-area">
+            <button class="nav-arrow prev" style="display: none;"><i class="fas fa-chevron-left"></i></button>
+            <button class="nav-arrow next" style="display: none;"><i class="fas fa-chevron-right"></i></button>
+            <div class="page-content">
+                <div class="text-box" id="editableText">
+                    <div class="handle left"></div>
+                    <div class="handle right"></div>
+                    <div class="resize-handle"></div>
+                    <p contenteditable="true" style="font-size: 24px; color: #000000; font-family: Arial;">We invite you and your family's gracious presence and blessing</p>
+                </div>
+                <div class="lantern-icon"></div>
+            </div>
+            <div class="page-dots">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+            <div class="zoom-control">
+                <span>-</span>
+                <input type="range" id="zoom-slider" min="50" max="150" value="100">
+                <span>+</span>
+                <span class="zoom-value">100%</span>
+            </div>
+        </div>
+
+        <div class="right-sidebar">
+            <div class="sidebar-header">
+                <h3>Blessing 1</h3>
+                <div class="language-select">
+                    <span>Language</span>
+                    <select id="languageSelect">
+                        <option value="en">English</option>
+                        <option value="es">Spanish</option>
+                        <option value="fr">French</option>
+                        <option value="hi">Hindi</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <div class="section-title">Text Content</div>
+                <textarea class="text-input" id="textInput" placeholder="Enter your text here">We invite you and your family's gracious presence and blessing</textarea>
+            </div>
+
+            <div class="edit-section">
+                <div class="section-title">Font Style</div>
+                <div class="font-controls">
+                    <div class="control-group">
+                        <label>Font Family</label>
+                        <select id="fontFamily">
+                            <option value="Charm">Charm</option>
+                            <option value="Great Vibes">Great Vibes</option>
+                            <option value="Playfair Display">Playfair Display</option>
+                            <option value="Dancing Script">Dancing Script</option>
+                            <option value="Pacifico">Pacifico</option>
+                            <option value="Satisfy">Satisfy</option>
+                            <option value="Lobster">Lobster</option>
+                            <option value="Sacramento">Sacramento</option>
+                            <option value="Tangerine">Tangerine</option>
+                            <option value="Amatic SC">Amatic SC</option>
+                            <option value="Cinzel">Cinzel</option>
+                            <option value="Cormorant Garamond">Cormorant Garamond</option>
+                            <option value="Lora">Lora</option>
+                            <option value="Montserrat">Montserrat</option>
+                            <option value="Raleway">Raleway</option>
+                            <option value="Rouge Script">Rouge Script</option>
+                            <option value="Alex Brush">Alex Brush</option>
+                            <option value="Allura">Allura</option>
+                            <option value="Petit Formal Script">Petit Formal Script</option>
+                            <option value="Pinyon Script">Pinyon Script</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>Font Weight</label>
+                        <select id="fontWeight">
+                            <option value="regular">Regular</option>
+                            <option value="bold">Bold</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <div class="section-title">Text Properties</div>
+                <div class="text-controls">
+                    <div class="control-item">
+                        <label>Size</label>
+                        <div class="number-input">
+                            <input type="number" id="fontSize" value="23.71" step="0.1" min="1" max="100">
+                            <span class="unit">px</span>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>Color</label>
+                        <div class="color-picker-container">
+                            <div class="color-categories">
+                                <div class="category">
+                                    <span class="category-label">Basic</span>
+                                    <div class="color-row">
+                                        <button class="color-btn" data-color="#000000" style="background-color: #000000;" title="Black"></button>
+                                        <button class="color-btn" data-color="#FFFFFF" style="background-color: #FFFFFF; border: 1px solid #ddd;" title="White"></button>
+                                        <button class="color-btn" data-color="#808080" style="background-color: #808080;" title="Gray"></button>
+                                        <button class="color-btn" data-color="#C0C0C0" style="background-color: #C0C0C0;" title="Silver"></button>
+                                    </div>
+                                </div>
+                                
+                                <div class="category">
+                                    <span class="category-label">Warm Colors</span>
+                                    <div class="color-row">
+                                        <button class="color-btn" data-color="#FF0000" style="background-color: #FF0000;" title="Red"></button>
+                                        <button class="color-btn" data-color="#FFA500" style="background-color: #FFA500;" title="Orange"></button>
+                                        <button class="color-btn" data-color="#FFD700" style="background-color: #FFD700;" title="Gold"></button>
+                                        <button class="color-btn" data-color="#FF69B4" style="background-color: #FF69B4;" title="Pink"></button>
+                                    </div>
+                                </div>
+
+                                <div class="category">
+                                    <span class="category-label">Cool Colors</span>
+                                    <div class="color-row">
+                                        <button class="color-btn" data-color="#0000FF" style="background-color: #0000FF;" title="Blue"></button>
+                                        <button class="color-btn" data-color="#4B0082" style="background-color: #4B0082;" title="Indigo"></button>
+                                        <button class="color-btn" data-color="#800080" style="background-color: #800080;" title="Purple"></button>
+                                        <button class="color-btn" data-color="#008080" style="background-color: #008080;" title="Teal"></button>
+                                    </div>
+                                </div>
+
+                                <div class="category">
+                                    <span class="category-label">Nature</span>
+                                    <div class="color-row">
+                                        <button class="color-btn" data-color="#008000" style="background-color: #008000;" title="Green"></button>
+                                        <button class="color-btn" data-color="#A52A2A" style="background-color: #A52A2A;" title="Brown"></button>
+                                        <button class="color-btn" data-color="#8B4513" style="background-color: #8B4513;" title="Saddle Brown"></button>
+                                        <button class="color-btn" data-color="#006400" style="background-color: #006400;" title="Dark Green"></button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="custom-color-section">
+                                <span class="category-label">Custom Color</span>
+                                <div class="custom-color-picker">
+                                    <div class="color-preview" id="colorPreview"></div>
+                                    <input type="color" id="textColor" value="#000000">
+                                    <div class="color-info">
+                                        <span class="color-hex" id="colorHex">#000000</span>
+                                        <button class="apply-color-btn">Apply</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>Alignment</label>
+                        <div class="alignment-controls">
+                            <button class="align-btn" data-align="left">⫷</button>
+                            <button class="align-btn" data-align="center">☰</button>
+                            <button class="align-btn" data-align="right">⫸</button>
+                        </div>
+                    </div>
+                    <div class="control-item">
+                        <label>Line Height</label>
+                        <div class="line-height-controls">
+                            <button class="line-height-btn" data-height="1">1</button>
+                            <button class="line-height-btn" data-height="1.5">1.5</button>
+                            <button class="line-height-btn" data-height="2">2</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="edit-section">
+                <div class="section-title">Animation</div>
+                <div class="animation-controls">
+                    <div class="control-group">
+                        <label>Start Animation</label>
+                        <select id="startAnimation">
+                            <option value="">None</option>
+                            <option value="fade">Fade In</option>
+                            <option value="slide">Slide In</option>
+                            <option value="zoom">Zoom In</option>
+                        </select>
+                    </div>
+                    <div class="control-group">
+                        <label>End Animation</label>
+                        <select id="endAnimation">
+                            <option value="">None</option>
+                            <option value="fade">Fade Out</option>
+                            <option value="slide">Slide Out</option>
+                            <option value="zoom">Zoom Out</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+       
+        let isDragging = false;
+        let selectedElement = null;
+        let currentX;
+        let currentY;
+        let initialX;
+        let initialY;
+
+        function makeTextBoxDraggable(element) {
+            let isDragging = false;
+            let currentX = 0;
+            let currentY = 0;
+            let initialX = 0;
+            let initialY = 0;
+            let xOffset = 0;
+            let yOffset = 0;
+
+            element.addEventListener('mousedown', dragStart);
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', dragEnd);
+
+            function dragStart(e) {
+              
+                if (e.target.tagName.toLowerCase() === 'p' || 
+                    e.target.classList.contains('handle') || 
+                    e.target.classList.contains('resize-handle')) {
+                    return;
+                }
+
+                isDragging = true;
+                const rect = element.getBoundingClientRect();
+                const parentRect = element.parentElement.getBoundingClientRect();
+
+                currentX = rect.left - parentRect.left;
+                currentY = rect.top - parentRect.top;
+
+                initialX = e.clientX;
+                initialY = e.clientY;
+
+                element.style.cursor = 'grabbing';
+                selectTextElement(element);
+            }
+
+            function drag(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+
+                const dx = e.clientX - initialX;
+                const dy = e.clientY - initialY;
+
+                const newX = currentX + dx;
+                const newY = currentY + dy;
+
+                const parentRect = element.parentElement.getBoundingClientRect();
+                const elementRect = element.getBoundingClientRect();
+
+                const maxX = parentRect.width - elementRect.width;
+                const maxY = parentRect.height - elementRect.height;
+
+                xOffset = Math.max(0, Math.min(newX, maxX));
+                yOffset = Math.max(0, Math.min(newY, maxY));
+
+                element.style.left = xOffset + 'px';
+                element.style.top = yOffset + 'px';
+                element.style.transform = 'none';
+            }
+
+            function dragEnd() {
+                if (!isDragging) return;
+                isDragging = false;
+                element.style.cursor = 'move';
+
+                // Update the current position
+                currentX = xOffset;
+                currentY = yOffset;
+
+                saveToHistory();
+            }
+
+            // Handle resizing
+            const leftHandle = element.querySelector('.handle.left');
+            const rightHandle = element.querySelector('.handle.right');
+            const resizeHandle = element.querySelector('.resize-handle');
+
+            if (leftHandle) {
+                leftHandle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    const startX = e.clientX;
+                    const startWidth = element.offsetWidth;
+                    const startLeft = element.offsetLeft;
+                    const img = element.querySelector('img');
+
+                    function handleResize(e) {
+                        const dx = e.clientX - startX;
+                        const newWidth = startWidth - dx;
+                        const newLeft = startLeft + dx;
+
+                        if (newWidth > 50) {
+                            if (img) {
+                                img.style.width = newWidth + 'px';
+                                element.style.width = 'auto';
+                            } else {
+                                element.style.width = newWidth + 'px';
+                            }
+                            element.style.left = newLeft + 'px';
+                        }
+                    }
+
+                    function stopResize() {
+                        window.removeEventListener('mousemove', handleResize);
+                        window.removeEventListener('mouseup', stopResize);
+                        saveToHistory();
+                    }
+
+                    window.addEventListener('mousemove', handleResize);
+                    window.addEventListener('mouseup', stopResize);
+                });
+            }
+
+            if (rightHandle) {
+                rightHandle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    const startX = e.clientX;
+                    const startWidth = element.offsetWidth;
+                    const img = element.querySelector('img');
+
+                    function handleResize(e) {
+                        const dx = e.clientX - startX;
+                        const newWidth = startWidth + dx;
+                        if (newWidth > 50) {
+                            if (img) {
+                                img.style.width = newWidth + 'px';
+                                element.style.width = 'auto';
+                            } else {
+                                element.style.width = newWidth + 'px';
+                            }
+                        }
+                    }
+
+                    function stopResize() {
+                        window.removeEventListener('mousemove', handleResize);
+                        window.removeEventListener('mouseup', stopResize);
+                        saveToHistory();
+                    }
+
+                    window.addEventListener('mousemove', handleResize);
+                    window.addEventListener('mouseup', stopResize);
+                });
+            }
+
+            if (resizeHandle) {
+                resizeHandle.addEventListener('mousedown', (e) => {
+                    e.stopPropagation();
+                    const startX = e.clientX;
+                    const startWidth = element.offsetWidth;
+                    const img = element.querySelector('img');
+
+                    function handleResize(e) {
+                        const dx = e.clientX - startX;
+                        const newWidth = startWidth + dx;
+                        if (newWidth > 50) {
+                            if (img) {
+                                img.style.width = newWidth + 'px';
+                                element.style.width = 'auto';
+                            } else {
+                                element.style.width = newWidth + 'px';
+                            }
+                        }
+                    }
+
+                    function stopResize() {
+                        window.removeEventListener('mousemove', handleResize);
+                        window.removeEventListener('mouseup', stopResize);
+                        saveToHistory();
+                    }
+
+                    window.addEventListener('mousemove', handleResize);
+                    window.addEventListener('mouseup', stopResize);
+                });
+            }
+
+            // Add delete button to the element
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                element.remove();
+                saveSlideState();
+            };
+            element.appendChild(deleteBtn);
+        }
+
+        function createNewTextElement() {
+            const pageContent = document.querySelector('.page-content');
+            if (!pageContent) return;
+
+            // Create new text box
+            const textBox = document.createElement('div');
+            textBox.className = 'text-box';
+            textBox.style.position = 'absolute';
+            textBox.style.left = '50%';
+            textBox.style.top = '50%';
+            textBox.style.transform = 'translate(-50%, -50%)';
+            textBox.style.minWidth = '100px';
+            textBox.style.cursor = 'move';
+            
+            // Add handles and content
+            textBox.innerHTML = `
+                <div class="handle left"></div>
+                <div class="handle right"></div>
+                <div class="resize-handle"></div>
+                <p contenteditable="true" style="font-size: 24px; color: #000000; font-family: Arial;">Double click to edit</p>
+            `;
+            
+            // Add to page
+            pageContent.appendChild(textBox);
+            
+            // Make draggable
+            makeTextBoxDraggable(textBox);
+            
+            // Select the new text box
+            document.querySelectorAll('.text-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+            textBox.classList.add('selected');
+            
+            // Update text input in right panel
+            const textInput = document.getElementById('textInput');
+            if (textInput) {
+                textInput.value = textBox.querySelector('p').textContent;
+            }
+            
+            // Save state for undo/redo
+            if (window.undoRedoManager) {
+                undoRedoManager.saveState();
+            }
+        }
+
+        // Update the initialization code to add event listeners
+        function initializeAddText() {
+            // Add Text button in right sidebar
+            const addTextBtn = document.querySelector('.add-text-btn');
+            if (addTextBtn) {
+                // Remove existing listeners
+                const newAddTextBtn = addTextBtn.cloneNode(true);
+                addTextBtn.parentNode.replaceChild(newAddTextBtn, addTextBtn);
+                
+                // Add new click handler
+                newAddTextBtn.addEventListener('click', createNewTextElement);
+            }
+        }
+
+        // Add to the initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeAddText();
+        });
+
+        // Color Picker Functionality
+        function initializeColorPicker() {
+            const colorBtns = document.querySelectorAll('.color-btn');
+            const colorInput = document.getElementById('textColor');
+            const applyColorBtn = document.querySelector('.apply-color-btn');
+
+            colorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const color = btn.dataset.color;
+                    applyColorToSelectedText(color);
+                });
+            });
+
+            colorInput.addEventListener('input', (e) => {
+                updateColorPickerUI(e.target.value);
+            });
+
+            applyColorBtn.addEventListener('click', () => {
+                applyColorToSelectedText(colorInput.value);
+            });
+        }
+
+        function updateColorPickerUI(color) {
+            const colorPreview = document.getElementById('colorPreview');
+            const colorHex = document.getElementById('colorHex');
+            const colorInput = document.getElementById('textColor');
+
+            colorPreview.style.backgroundColor = color;
+            colorHex.textContent = color.toUpperCase();
+            colorInput.value = color;
+
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.color.toUpperCase() === color.toUpperCase());
+            });
+        }
+
+        function applyColorToSelectedText(color) {
+            const selectedText = document.querySelector('.text-box.selected');
+            if (selectedText) {
+                selectedText.querySelector('p').style.color = color;
+                saveState();
+            }
+        }
+
+        // Save state
+        function saveState() {
+            const textBoxes = document.querySelectorAll('.text-box');
+            const state = Array.from(textBoxes).map(box => ({
+                text: box.querySelector('p').textContent,
+                color: box.querySelector('p').style.color,
+                transform: box.style.transform,
+                position: {
+                    left: box.style.left,
+                    top: box.style.top
+                }
+            }));
+            
+            // You can implement state saving logic here
+            console.log('State saved:', state);
+        }
+
+        // Left Pane Functionality
+        let undoStack = [];
+        let redoStack = [];
+        let currentPageIndex = 0;
+        let pageContents = {};
+
+        function saveToHistory() {
+            const state = {
+                pages: Array.from(document.querySelectorAll('.page-list .page-item')).map(page => page.outerHTML),
+                pageContents: {...pageContents},
+                currentPageIndex: currentPageIndex
+            };
+            undoStack.push(JSON.stringify(state));
+            redoStack = []; // Clear redo stack when new action is performed
+        }
+
+        function undo() {
+            if (undoStack.length > 0) {
+                // Save current state to redo stack
+                const currentState = {
+                    pages: Array.from(document.querySelectorAll('.page-list .page-item')).map(page => page.outerHTML),
+                    pageContents: {...pageContents},
+                    currentPageIndex: currentPageIndex
+                };
+                redoStack.push(JSON.stringify(currentState));
+
+                // Restore previous state
+                const previousState = JSON.parse(undoStack.pop());
+                restoreState(previousState);
+            }
+        }
+
+        function redo() {
+            if (redoStack.length > 0) {
+                // Save current state to undo stack
+                const currentState = {
+                    pages: Array.from(document.querySelectorAll('.page-list .page-item')).map(page => page.outerHTML),
+                    pageContents: {...pageContents},
+                    currentPageIndex: currentPageIndex
+                };
+                undoStack.push(JSON.stringify(currentState));
+
+                // Restore next state
+                const nextState = JSON.parse(redoStack.pop());
+                restoreState(nextState);
+            }
+        }
+
+        function restoreState(state) {
+            // Restore pages
+            const pageList = document.querySelector('.page-list');
+            pageList.innerHTML = state.pages.join('');
+            
+            // Restore page contents
+            pageContents = {...state.pageContents};
+            
+            // Restore current page
+            currentPageIndex = state.currentPageIndex;
+            const pageItems = document.querySelectorAll('.page-item');
+            pageItems.forEach((item, index) => {
+                if (index === currentPageIndex) {
+                    item.classList.add('active');
+                } else {
+                    item.classList.remove('active');
+                }
+            });
+
+            // Restore current page content
+            const pageContent = document.querySelector('.page-content');
+            if (pageContents[currentPageIndex]) {
+                pageContent.innerHTML = pageContents[currentPageIndex];
+            } else {
+                pageContent.innerHTML = '';
+            }
+
+            // Reinitialize draggable elements
+            document.querySelectorAll('.text-box').forEach(textBox => {
+                makeTextBoxDraggable(textBox);
+            });
+        }
+
+        function initializeLeftPane() {
+            const pageList = document.querySelector('.page-list');
+            const addSlideBtn = document.querySelector('.customize-btn');
+            
+            // Handle page switching
+            pageList.addEventListener('click', (e) => {
+                const pageItem = e.target.closest('.page-item');
+                if (!pageItem) return;
+
+                // Save current page content before switching
+                const currentContent = document.querySelector('.page-content');
+                if (currentContent) {
+                    pageContents[currentPageIndex] = currentContent.innerHTML;
+                }
+
+                // Update active page
+                document.querySelectorAll('.page-item').forEach((item, index) => {
+                    if (item === pageItem) {
+                        item.classList.add('active');
+                        currentPageIndex = index;
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+
+                // Load content for the selected page
+                if (pageContents[currentPageIndex]) {
+                    currentContent.innerHTML = pageContents[currentPageIndex];
+                } else {
+                    // Initialize new page with default content
+                    currentContent.innerHTML = `
+                        <div class="text-box" style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);">
+                            <div class="handle left"></div>
+                            <div class="handle right"></div>
+                            <div class="resize-handle"></div>
+                            <p contenteditable="true" style="font-size: 24px; color: #000000; font-family: Arial;">Double click to edit</p>
+                        </div>
+                    `;
+                }
+
+                // Reinitialize draggable elements for the new page
+                document.querySelectorAll('.text-box').forEach(textBox => {
+                    makeTextBoxDraggable(textBox);
+                });
+
+                saveToHistory();
+            });
+            
+            // Handle add slide button
+            addSlideBtn.addEventListener('click', () => {
+                // Save current page content before adding new page
+                const currentContent = document.querySelector('.page-content');
+                if (currentContent) {
+                    pageContents[currentPageIndex] = currentContent.innerHTML;
+                }
+
+                const newPageIndex = document.querySelectorAll('.page-item').length;
+                const newPageItem = document.createElement('div');
+                newPageItem.className = 'page-item';
+                
+                newPageItem.innerHTML = `
+                    <img src="https://via.placeholder.com/150x200" alt="Page ${newPageIndex + 1}">
+                    <p>Page ${newPageIndex + 1}</p>
+                `;
+                
+                pageList.appendChild(newPageItem);
+                
+                // Initialize empty elements array for this slide
+                slideElements.set(newPageIndex - 1, []);
+                
+                // Add click handler to page item
+                pageItem.addEventListener('click', function() {
+                    switchToSlide(parseInt(this.dataset.slideIndex));
+                });
+                
+                // Switch to new slide
+                switchToSlide(newPageIndex - 1);
+                
+                // Save state after changes
+                history.saveState();
+                
+            });
+
+            // Handle add text button
+            const addTextBtn = document.querySelector('.add-text-btn');
+            addTextBtn.addEventListener('click', () => {
+                createNewTextElement();
+                saveToHistory();
+            });
+        }
+
+        // Save state
+        function saveState() {
+            const state = {
+                pages: Array.from(document.querySelectorAll('.page-list .page-item')).map(page => page.outerHTML),
+                pageContents: {...pageContents},
+                currentPageIndex: currentPageIndex
+            };
+            
+            undoStack.push(JSON.stringify(state));
+            redoStack = []; // Clear redo stack when new action is performed
+        }
+
+        function restoreState(state) {
+            // Restore pages
+            const pageList = document.querySelector('.page-list');
+            pageList.innerHTML = state.pages.join('');
+            
+            // Restore page contents
+            pageContents = {...state.pageContents};
+            
+            // Restore current page
+            currentPageIndex = state.currentPageIndex;
+            const pageItems = document.querySelectorAll('.page-item');
+            pageItems.forEach((item, index) => {
+                item.classList.toggle('active', index === currentPageIndex);
+            });
+
+            // Restore current page content
+            const pageContent = document.querySelector('.page-content');
+            if (pageContents[currentPageIndex]) {
+                pageContent.innerHTML = pageContents[currentPageIndex];
+            } else {
+                pageContent.innerHTML = '';
+            }
+
+            // Reinitialize draggable elements
+            document.querySelectorAll('.text-box').forEach(textBox => {
+                makeTextBoxDraggable(textBox);
+            });
+        }
+        
+        // Add initializeLeftPane to the DOMContentLoaded event
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize text dragging
+            const textBoxes = document.querySelectorAll('.text-box');
+            textBoxes.forEach(textBox => {
+                makeTextBoxDraggable(textBox);
+            });
+
+            // Initialize left pane functionality
+            const pageList = document.querySelector('.page-list');
+            const addSlideBtn = document.querySelector('.customize-btn');
+            
+            // Handle page item selection
+            pageList.addEventListener('click', (e) => {
+                const pageItem = e.target.closest('.page-item');
+                if (pageItem) {
+                    document.querySelectorAll('.page-item').forEach(item => {
+                        item.classList.remove('active');
+                    });
+                    pageItem.classList.add('active');
+                }
+            });
+            
+            // Handle add slide button
+            addSlideBtn.addEventListener('click', () => {
+                const newPageItem = document.createElement('div');
+                newPageItem.className = 'page-item';
+                const pageCount = document.querySelectorAll('.page-item').length + 1;
+                
+                newPageItem.innerHTML = `
+                    <img src="https://via.placeholder.com/150x200" alt="Page ${pageCount}">
+                    <p>Page ${pageCount}</p>
+                `;
+                
+                pageList.appendChild(newPageItem);
+                newPageItem.click();
+            });
+
+            // Initialize color picker
+            initializeColorPicker();
+        });
+
+        function selectTextElement(element) {
+            // Remove selection from all text boxes
+            document.querySelectorAll('.text-box').forEach(box => {
+                box.classList.remove('selected');
+            });
+            
+            // Add selection to clicked text box
+            element.classList.add('selected');
+            
+            // Update right panel controls
+            const textElement = element.querySelector('p');
+            if (textElement) {
+                // Update text input
+                const textInput = document.getElementById('textInput');
+                if (textInput) {
+                    textInput.value = textElement.textContent;
+                }
+                
+                // Update font family
+                const fontFamily = document.getElementById('fontFamily');
+                if (fontFamily) {
+                    const currentFont = window.getComputedStyle(textElement).fontFamily.split(',')[0].replace(/['"]/g, '');
+                    fontFamily.value = currentFont;
+                }
+                
+                // Update font size
+                const fontSize = document.getElementById('fontSize');
+                if (fontSize) {
+                    const size = parseFloat(window.getComputedStyle(textElement).fontSize);
+                    fontSize.value = size;
+                }
+                
+                // Update font weight
+                const fontWeight = document.getElementById('fontWeight');
+                if (fontWeight) {
+                    const weight = window.getComputedStyle(textElement).fontWeight;
+                    fontWeight.value = weight >= 700 ? 'bold' : 'regular';
+                }
+                
+                // Update color
+                const textColor = document.getElementById('textColor');
+                if (textColor) {
+                    const color = window.getComputedStyle(textElement).color;
+                    const rgb2hex = (rgb) => `#${rgb.match(/^rgb\((\d+),\s*(\d+),\s*(\d+)\)$/).slice(1).map(n => parseInt(n, 10).toString(16).padStart(2, '0')).join('')}`;
+                    textColor.value = rgb2hex(color);
+                }
+                
+                // Update alignment
+                const align = window.getComputedStyle(textElement).textAlign;
+                document.querySelectorAll('.align-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.align === align);
+                });
+                
+                // Update line height
+                const lineHeight = window.getComputedStyle(textElement).lineHeight;
+                document.querySelectorAll('.line-height-btn').forEach(btn => {
+                    btn.classList.toggle('active', btn.dataset.height === lineHeight);
+                });
+            }
+        }
+
+        // Update text box event listeners
+        function initializeTextBoxEvents() {
+            // Handle text box selection
+            document.addEventListener('mousedown', (e) => {
+                const textBox = e.target.closest('.text-box');
+                if (textBox) {
+                    selectTextElement(textBox);
+                }
+            });
+
+            // Handle text input changes
+            const textInput = document.getElementById('textInput');
+            if (textInput) {
+                textInput.addEventListener('input', (e) => {
+                    const selectedText = document.querySelector('.text-box.selected');
+                    if (selectedText) {
+                        selectedText.querySelector('p').textContent = e.target.value;
+                        if (window.undoRedoManager) {
+                            undoRedoManager.saveState();
+                        }
+                    }
+                });
+            }
+
+            // Handle formatting changes
+            document.querySelectorAll('.align-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const selectedText = document.querySelector('.text-box.selected');
+                    if (selectedText) {
+                        selectedText.querySelector('p').style.textAlign = btn.dataset.align;
+                        document.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        if (window.undoRedoManager) {
+                            undoRedoManager.saveState();
+                        }
+                    }
+                });
+            });
+
+            // Handle line height changes
+            document.querySelectorAll('.line-height-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const selectedText = document.querySelector('.text-box.selected');
+                    if (selectedText) {
+                        selectedText.querySelector('p').style.lineHeight = btn.dataset.height;
+                        document.querySelectorAll('.line-height-btn').forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        if (window.undoRedoManager) {
+                            undoRedoManager.saveState();
+                        }
+                    }
+                });
+            });
+        }
+
+        // Add to initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeTextBoxEvents();
+        });
+
+        // Font controls
+        document.getElementById('fontFamily').addEventListener('change', (e) => {
+            const selectedText = document.querySelector('.text-box.selected');
+            if (selectedText) {
+                selectedText.querySelector('p').style.fontFamily = e.target.value;
+                saveState();
+            }
+        });
+
+        document.getElementById('fontWeight').addEventListener('change', (e) => {
+            const selectedText = document.querySelector('.text-box.selected');
+            if (selectedText) {
+                selectedText.querySelector('p').style.fontWeight = e.target.value === 'bold' ? 'bold' : 'normal';
+                saveState();
+            }
+        });
+
+        document.getElementById('fontSize').addEventListener('input', (e) => {
+            const selectedText = document.querySelector('.text-box.selected');
+            if (selectedText) {
+                selectedText.querySelector('p').style.fontSize = `${e.target.value}px`;
+                saveState();
+            }
+        });
+
+        // Text input synchronization
+        document.getElementById('textInput').addEventListener('input', (e) => {
+            const selectedText = document.querySelector('.text-box.selected');
+            if (selectedText) {
+                selectedText.querySelector('p').textContent = e.target.value;
+                saveState();
+            }
+        });
+
+        // Alignment controls
+        document.querySelectorAll('.align-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const selectedText = document.querySelector('.text-box.selected');
+                if (selectedText) {
+                    document.querySelectorAll('.align-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedText.querySelector('p').style.textAlign = btn.dataset.align;
+                    saveState();
+                }
+            });
+        });
+
+        // Line height controls
+        document.querySelectorAll('.line-height-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const selectedText = document.querySelector('.text-box.selected');
+                if (selectedText) {
+                    document.querySelectorAll('.line-height-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    selectedText.querySelector('p').style.lineHeight = btn.dataset.height;
+                    saveState();
+                }
+            });
+        });
+
+        // Animation controls
+        document.getElementById('startAnimation').addEventListener('change', (e) => {
+            const selectedText = document.querySelector('.text-box.selected');
+            if (selectedText) {
+                const animation = e.target.value;
+                if (animation) {
+                    selectedText.style.animation = `${animation}In 1s ease-in-out`;
+                } else {
+                    selectedText.style.animation = '';
+                }
+                saveState();
+            }
+        });
+
+        document.getElementById('endAnimation').addEventListener('change', (e) => {
+            const selectedText = document.querySelector('.text-box.selected');
+            if (selectedText) {
+                const animation = e.target.value;
+                if (animation) {
+                    selectedText.style.animation = `${animation}Out 1s ease-in-out`;
+                } else {
+                    selectedText.style.animation = '';
+                }
+                saveState();
+            }
+        });
+
+        // Zoom functionality
+        const zoomSlider = document.getElementById('zoom-slider');
+        const zoomValue = document.querySelector('.zoom-value');
+        let currentZoom = 100;
+
+        zoomSlider.addEventListener('input', (e) => {
+            currentZoom = e.target.value;
+            applyZoom(currentZoom);
+        });
+
+        function applyZoom(zoomLevel) {
+            const pageContent = document.querySelector('.page-content');
+            const scale = zoomLevel / 100;
+            pageContent.style.transform = `scale(${scale})`;
+            zoomValue.textContent = `${zoomLevel}%`;
+        }
+
+        // Add zoom buttons functionality
+        const minusBtn = document.querySelector('.zoom-control span:first-child');
+        const plusBtn = document.querySelector('.zoom-control span:nth-child(3)');
+
+        minusBtn.addEventListener('click', () => {
+            currentZoom = Math.max(50, currentZoom - 10);
+            zoomSlider.value = currentZoom;
+            applyZoom(currentZoom);
+        });
+
+        plusBtn.addEventListener('click', () => {
+            currentZoom = Math.min(150, currentZoom + 10);
+            zoomSlider.value = currentZoom;
+            applyZoom(currentZoom);
+        });
+
+        // Update text box selection to sync with text input
+        function updateTextInput(textBox) {
+            const textInput = document.getElementById('textInput');
+            const fontFamily = document.getElementById('fontFamily');
+            const fontSize = document.getElementById('fontSize');
+            const fontWeight = document.getElementById('fontWeight');
+            
+            const p = textBox.querySelector('p');
+            const style = window.getComputedStyle(p);
+            
+            textInput.value = p.textContent;
+            fontFamily.value = style.fontFamily.replace(/['"]/g, '') || 'Charm';
+            fontSize.value = parseFloat(style.fontSize) || 23.71;
+            fontWeight.value = style.fontWeight === '700' || style.fontWeight === 'bold' ? 'bold' : 'regular';
+            
+            // Update alignment buttons
+            const align = style.textAlign || 'center';
+            document.querySelectorAll('.align-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.align === align);
+            });
+            
+            // Update line height buttons
+            const lineHeight = style.lineHeight || '1.5';
+            document.querySelectorAll('.line-height-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.height === lineHeight);
+            });
+        }
+
+        // Update the selectTextElement function
+        const originalSelectTextElement = selectTextElement;
+        selectTextElement = function(element) {
+            originalSelectTextElement(element);
+            updateTextInput(element);
+        };
+
+        // Make initial text box draggable and selected
+        const initialTextBox = document.querySelector('.text-box');
+        if (initialTextBox) {
+            makeTextBoxDraggable(initialTextBox);
+            selectTextElement(initialTextBox);
+        }
+
+        // Simple state management
+        const history = {
+            states: [],
+            currentIndex: -1,
+            maxStates: 30,
+
+            saveState() {
+                // Capture current state
+                const state = {
+                    pageList: document.querySelector('.page-list').innerHTML,
+                    pageContent: document.querySelector('.page-content').innerHTML
+                };
+
+                // Remove any future states if we're in the middle of the history
+                this.states = this.states.slice(0, this.currentIndex + 1);
+                
+                // Add new state
+                this.states.push(JSON.stringify(state));
+                this.currentIndex++;
+
+                // Limit history size
+                if (this.states.length > this.maxStates) {
+                    this.states.shift();
+                    this.currentIndex--;
+                }
+            },
+
+            undo() {
+                if (this.currentIndex > 0) {
+                    this.currentIndex--;
+                    this.restoreState(this.states[this.currentIndex]);
+                }
+            },
+
+            redo() {
+                if (this.currentIndex < this.states.length - 1) {
+                    this.currentIndex++;
+                    this.restoreState(this.states[this.currentIndex]);
+                }
+            },
+
+            restoreState(stateJson) {
+                const state = JSON.parse(stateJson);
+                
+                // Restore page list
+                document.querySelector('.page-list').innerHTML = state.pageList;
+                
+                // Restore page content
+                document.querySelector('.page-content').innerHTML = state.pageContent;
+                
+                // Reinitialize draggable elements
+                document.querySelectorAll('.text-box').forEach(textBox => {
+                    makeTextBoxDraggable(textBox);
+                });
+            }
+        };
+
+        // Initialize undo/redo buttons
+        function initializeUndoRedo() {
+            // Clear any existing listeners
+            const undoBtn = document.querySelector('.undo-btn');
+            const redoBtn = document.querySelector('.redo-btn');
+            
+            const newUndoBtn = undoBtn.cloneNode(true);
+            const newRedoBtn = redoBtn.cloneNode(true);
+            
+            undoBtn.parentNode.replaceChild(newUndoBtn, undoBtn);
+            redoBtn.parentNode.replaceChild(newRedoBtn, redoBtn);
+
+            // Add new listeners
+            newUndoBtn.addEventListener('click', () => history.undo());
+            newRedoBtn.addEventListener('click', () => history.redo());
+
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                    if (e.shiftKey) {
+                        e.preventDefault();
+                        history.redo();
+                    } else {
+                        e.preventDefault();
+                        history.undo();
+                    }
+                }
+            });
+
+            // Save initial state
+            history.saveState();
+        }
+
+        // Update Add Slide functionality to use history
+        function setupAddSlideButton() {
+            const oldButton = document.querySelector('.customize-btn');
+            const newButton = oldButton.cloneNode(true);
+            oldButton.parentNode.replaceChild(newButton, oldButton);
+            
+            let isProcessing = false;
+            
+            newButton.addEventListener('click', function(e) {
+                if (isProcessing) return;
+                isProcessing = true;
+                
+                try {
+                    const pageList = document.querySelector('.page-list');
+                    const pageCount = pageList.children.length + 1;
+                    
+                    const pageItem = document.createElement('div');
+                    pageItem.className = 'page-item';
+                    pageItem.dataset.slideIndex = pageCount - 1;
+                    pageItem.innerHTML = `
+                        <img src="https://via.placeholder.com/150x200" alt="Page ${pageCount}">
+                        <p>Page ${pageCount}</p>
+                    `;
+                    
+                    pageList.appendChild(pageItem);
+                    
+                    // Initialize empty elements array for this slide
+                    slideElements.set(pageCount - 1, []);
+                    
+                    // Add click handler to page item
+                    pageItem.addEventListener('click', function() {
+                        switchToSlide(parseInt(this.dataset.slideIndex));
+                    });
+                    
+                    // Switch to new slide
+                    switchToSlide(pageCount - 1);
+                    
+                    // Save state after changes
+                    history.saveState();
+                    
+                } finally {
+                    setTimeout(() => {
+                        isProcessing = false;
+                    }, 500);
+                }
+            });
+        }
+
+        // Update text editing to use history
+        function updateTextContent(element) {
+            // ... existing text update code ...
+            history.saveState();
+        }
+
+        // Update text dragging to use history
+        function finishDragging() {
+            // ... existing drag end code ...
+            history.saveState();
+        }
+
+        // Initialize everything
+        function initializeApp() {
+            initializeEditor();
+            initializeColorPicker();
+            initializeFonts();
+            initializeUndoRedo();
+            setupAddSlideButton();
+            
+            const firstPage = document.querySelector('.page-item');
+            if (firstPage) {
+                firstPage.click();
+                history.saveState();
+            }
+        }
+
+        // Start the app
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+
+        // Simple undo/redo system
+        const undoRedoManager = {
+            undoStack: [],
+            redoStack: [],
+            maxStates: 50,
+
+            captureState() {
+                const state = {
+                    pageList: document.querySelector('.page-list').innerHTML,
+                    pageContent: document.querySelector('.page-content').innerHTML
+                };
+                return state;
+            },
+
+            saveState() {
+                const currentState = this.captureState();
+                this.undoStack.push(JSON.stringify(currentState));
+                this.redoStack = []; // Clear redo stack when new action is performed
+
+                // Limit stack size
+                if (this.undoStack.length > this.maxStates) {
+                    this.undoStack.shift();
+                }
+
+                // Update button states
+                this.updateButtonStates();
+            },
+
+            undo() {
+                if (this.undoStack.length > 1) { // Keep at least one state
+                    const currentState = this.undoStack.pop();
+                    this.redoStack.push(currentState);
+                    
+                    // Restore previous state
+                    const previousState = JSON.parse(this.undoStack[this.undoStack.length - 1]);
+                    this.restoreState(previousState);
+                    
+                    // Update button states
+                    this.updateButtonStates();
+                }
+            },
+
+            redo() {
+                if (this.redoStack.length > 0) {
+                    const nextState = this.redoStack.pop();
+                    this.undoStack.push(nextState);
+                    
+                    // Restore next state
+                    const state = JSON.parse(nextState);
+                    this.restoreState(state);
+                    
+                    // Update button states
+                    this.updateButtonStates();
+                }
+            },
+
+            restoreState(state) {
+                // Restore page list
+                document.querySelector('.page-list').innerHTML = state.pageList;
+                
+                // Restore page content
+                document.querySelector('.page-content').innerHTML = state.pageContent;
+                
+                // Reinitialize draggable elements
+                document.querySelectorAll('.text-box').forEach(textBox => {
+                    makeTextBoxDraggable(textBox);
+                });
+            },
+
+            updateButtonStates() {
+                const undoBtn = document.querySelector('.undo-btn');
+                const redoBtn = document.querySelector('.redo-btn');
+                
+                // Update undo button state
+                if (this.undoStack.length <= 1) {
+                    undoBtn.style.opacity = '0.5';
+                    undoBtn.style.cursor = 'not-allowed';
+                } else {
+                    undoBtn.style.opacity = '1';
+                    undoBtn.style.cursor = 'pointer';
+                }
+                
+                // Update redo button state
+                if (this.redoStack.length === 0) {
+                    redoBtn.style.opacity = '0.5';
+                    redoBtn.style.cursor = 'not-allowed';
+                } else {
+                    redoBtn.style.opacity = '1';
+                    redoBtn.style.cursor = 'pointer';
+                }
+            }
+        };
+
+        // Initialize undo/redo functionality
+        function initializeUndoRedo() {
+            // Get buttons
+            const undoBtn = document.querySelector('.undo-btn');
+            const redoBtn = document.querySelector('.redo-btn');
+            
+            // Remove any existing listeners
+            const newUndoBtn = undoBtn.cloneNode(true);
+            const newRedoBtn = redoBtn.cloneNode(true);
+            undoBtn.parentNode.replaceChild(newUndoBtn, undoBtn);
+            redoBtn.parentNode.replaceChild(newRedoBtn, redoBtn);
+            
+            // Add click handlers
+            newUndoBtn.addEventListener('click', () => undoRedoManager.undo());
+            newRedoBtn.addEventListener('click', () => undoRedoManager.redo());
+            
+            // Add keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'z' && (e.ctrlKey || e.metaKey)) {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        undoRedoManager.redo();
+                    } else {
+                        undoRedoManager.undo();
+                    }
+                }
+            });
+            
+            // Save initial state
+            undoRedoManager.saveState();
+        }
+
+        // Update event handlers to save state
+        function setupEventHandlers() {
+            // Save state after adding new slide
+            document.querySelector('.customize-btn').addEventListener('click', () => {
+                setTimeout(() => undoRedoManager.saveState(), 100);
+            });
+
+            // Save state after text changes
+            document.addEventListener('input', (e) => {
+                if (e.target.closest('.text-box')) {
+                    undoRedoManager.saveState();
+                }
+            });
+
+            // Save state after dragging ends
+            document.addEventListener('mouseup', (e) => {
+                if (e.target.closest('.text-box')) {
+                    undoRedoManager.saveState();
+                }
+            });
+
+            // Save state after formatting changes
+            ['fontFamily', 'fontSize', 'fontWeight', 'textColor'].forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.addEventListener('change', () => undoRedoManager.saveState());
+                }
+            });
+        }
+
+        // Initialize everything when document is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initializeUndoRedo();
+                setupEventHandlers();
+            });
+        } else {
+            initializeUndoRedo();
+            setupEventHandlers();
+        }
+
+        // Store elements for each slide
+        const slideElements = new Map();
+        let currentSlideIndex = 0;
+
+        function saveSlideState() {
+            // Save current slide's elements
+            const pageContent = document.querySelector('.page-content');
+            if (pageContent) {
+                const elements = Array.from(pageContent.children).map(el => el.cloneNode(true));
+                slideElements.set(currentSlideIndex, elements);
+            }
+        }
+
+        function switchToSlide(index) {
+            // Save current slide state before switching
+            saveSlideState();
+            
+            // Update current slide index
+            currentSlideIndex = index;
+            
+            // Update active states in page list
+            document.querySelectorAll('.page-item').forEach((item, idx) => {
+                item.classList.toggle('active', idx === index);
+            });
+            
+            // Get page content container
+            const pageContent = document.querySelector('.page-content');
+            pageContent.innerHTML = '';  // Clear existing content
+            
+            // Restore elements for this slide
+            const elements = slideElements.get(index) || [];
+            elements.forEach(element => {
+                const newElement = element.cloneNode(true);
+                pageContent.appendChild(newElement);
+                if (newElement.classList.contains('text-box')) {
+                    makeTextBoxDraggable(newElement);
+                }
+            });
+        }
+
+        // Update text editing to save slide state
+        document.addEventListener('input', (e) => {
+            const textBox = e.target.closest('.text-box');
+            if (textBox && e.target.tagName === 'P') {
+                saveSlideState();
+                if (window.undoRedoManager) {
+                    undoRedoManager.saveState();
+                }
+            }
+        });
+
+        // Update formatting controls to save slide state
+        document.addEventListener('DOMContentLoaded', () => {
+            // Font family changes
+            const fontFamily = document.getElementById('fontFamily');
+            if (fontFamily) {
+                fontFamily.addEventListener('change', () => {
+                    saveSlideState();
+                });
+            }
+
+            // Font size changes
+            const fontSize = document.getElementById('fontSize');
+            if (fontSize) {
+                fontSize.addEventListener('input', () => {
+                    saveSlideState();
+                });
+            }
+
+            // Color changes
+            const colorBtns = document.querySelectorAll('.color-btn');
+            colorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    saveSlideState();
+                });
+            });
+
+            // Alignment changes
+            const alignBtns = document.querySelectorAll('.align-btn');
+            alignBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    saveSlideState();
+                });
+            });
+
+            // Line height changes
+            const lineHeightBtns = document.querySelectorAll('.line-height-btn');
+            lineHeightBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    saveSlideState();
+                });
+            });
+        });
+
+        // Update text box creation to save slide state
+        function createNewTextElement() {
+            const pageContent = document.querySelector('.page-content');
+            if (!pageContent) return;
+
+            const textBox = document.createElement('div');
+            textBox.className = 'text-box';
+            textBox.style.position = 'absolute';
+            textBox.style.left = '50%';
+            textBox.style.top = '50%';
+            textBox.style.transform = 'translate(-50%, -50%)';
+            textBox.style.minWidth = '100px';
+            textBox.style.cursor = 'move';
+            
+            textBox.innerHTML = `
+                <div class="handle left"></div>
+                <div class="handle right"></div>
+                <div class="resize-handle"></div>
+                <p contenteditable="true" style="font-size: 24px; color: #000000; font-family: Arial;">Double click to edit</p>
+            `;
+            
+            pageContent.appendChild(textBox);
+            makeTextBoxDraggable(textBox);
+            selectTextElement(textBox);
+            
+            saveSlideState();
+        }
+
+        // Update drag end to save slide state
+        function updateDragHandlers() {
+            document.addEventListener('mouseup', (e) => {
+                const textBox = e.target.closest('.text-box');
+                if (textBox) {
+                    saveSlideState();
+                }
+            });
+        }
+
+        // Initialize everything
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize first slide
+            slideElements.set(0, Array.from(document.querySelector('.page-content').children));
+            currentSlideIndex = 0;
+            
+            // Add click handlers to existing page items
+            document.querySelectorAll('.page-item').forEach((item, index) => {
+                item.dataset.slideIndex = index;
+                item.addEventListener('click', function() {
+                    switchToSlide(parseInt(this.dataset.slideIndex));
+                });
+            });
+            
+            // Setup Add Slide button
+            setupAddSlideButton();
+            
+            // Setup drag handlers
+            updateDragHandlers();
+
+            // Setup navigation arrows
+            setupNavigationArrows();
+        });
+
+        // Navigation arrows functionality
+        function setupNavigationArrows() {
+            const prevArrow = document.querySelector('.nav-arrow.prev');
+            const nextArrow = document.querySelector('.nav-arrow.next');
+            const editorArea = document.querySelector('.editor-area');
+
+            function updateArrowsVisibility() {
+                const pageItems = document.querySelectorAll('.page-item');
+                const hasMultipleSlides = pageItems.length > 1;
+                
+                // Show/hide arrows based on number of slides
+                prevArrow.style.display = hasMultipleSlides ? 'flex' : 'none';
+                nextArrow.style.display = hasMultipleSlides ? 'flex' : 'none';
+                
+                // Update arrow states based on current slide
+                if (hasMultipleSlides) {
+                    prevArrow.style.opacity = currentSlideIndex === 0 ? '0.5' : '1';
+                    prevArrow.style.cursor = currentSlideIndex === 0 ? 'not-allowed' : 'pointer';
+                    
+                    nextArrow.style.opacity = currentSlideIndex === pageItems.length - 1 ? '0.5' : '1';
+                    nextArrow.style.cursor = currentSlideIndex === pageItems.length - 1 ? 'not-allowed' : 'pointer';
+                }
+            }
+
+            // Navigate to previous slide
+            prevArrow.addEventListener('click', () => {
+                if (currentSlideIndex > 0) {
+                    const prevSlideIndex = currentSlideIndex - 1;
+                    const pageItems = document.querySelectorAll('.page-item');
+                    pageItems[prevSlideIndex].click();
+                    updateArrowsVisibility();
+                }
+            });
+
+            // Navigate to next slide
+            nextArrow.addEventListener('click', () => {
+                const pageItems = document.querySelectorAll('.page-item');
+                if (currentSlideIndex < pageItems.length - 1) {
+                    const nextSlideIndex = currentSlideIndex + 1;
+                    pageItems[nextSlideIndex].click();
+                    updateArrowsVisibility();
+                }
+            });
+
+            // Update arrows when switching slides
+            const originalSwitchToSlide = window.switchToSlide;
+            window.switchToSlide = function(index) {
+                originalSwitchToSlide(index);
+                updateArrowsVisibility();
+            };
+
+            // Update arrows when adding new slides
+            const originalSetupAddSlideButton = window.setupAddSlideButton;
+            window.setupAddSlideButton = function() {
+                originalSetupAddSlideButton();
+                updateArrowsVisibility();
+            };
+
+            // Initial arrow visibility update
+            updateArrowsVisibility();
+        }
+
+        // Initialize image upload functionality
+        function initializeImageUpload() {
+            const addImageBtn = document.querySelector('.add-image-btn');
+            const imageInput = document.querySelector('.image-upload-input');
+
+            addImageBtn.addEventListener('click', () => {
+                imageInput.click();
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        const imageUrl = event.target.result;
+                        
+                        // Create image container
+                        const imageBox = document.createElement('div');
+                        imageBox.className = 'text-box image-box';
+                        imageBox.style.position = 'absolute';
+                        imageBox.style.left = '50%';
+                        imageBox.style.top = '50%';
+                        imageBox.style.transform = 'translate(-50%, -50%)';
+                        imageBox.style.cursor = 'move';
+                        
+                        // Add handles and image
+                        imageBox.innerHTML = `
+                            <div class="handle left"></div>
+                            <div class="handle right"></div>
+                            <div class="resize-handle"></div>
+                            <img src="${imageUrl}" alt="Uploaded image" style="width: 200px;">
+                        `;
+                        
+                        // Add to current slide
+                        const pageContent = document.querySelector('.page-content');
+                        if (pageContent) {
+                            pageContent.appendChild(imageBox);
+                            makeTextBoxDraggable(imageBox);
+                            
+                            // Save state
+                            saveSlideState();
+                            if (window.undoRedoManager) {
+                                undoRedoManager.saveState();
+                            }
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+                
+                // Reset input for next upload
+                imageInput.value = '';
+            });
+        }
+
+        // Add to initialization
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeImageUpload();
+        });
+
+        function addDeleteButton(element) {
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i>';
+            
+            deleteBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                element.remove();
+                saveSlideState();
+                if (window.undoRedoManager) {
+                    undoRedoManager.saveState();
+                }
+            });
+            
+            element.appendChild(deleteBtn);
+        }
+
+        function addNewTextBox() {
+            const textBox = document.createElement('div');
+            textBox.className = 'text-box';
+            textBox.style.position = 'absolute';
+            textBox.style.left = '50%';
+            textBox.style.top = '50%';
+            textBox.style.transform = 'translate(-50%, -50%)';
+            
+            textBox.innerHTML = `
+                <div class="handle left"></div>
+                <div class="handle right"></div>
+                <div class="resize-handle"></div>
+                <p contenteditable="true" style="font-size: 24px; color: #000000; font-family: Arial;">Double click to edit</p>
+            `;
+            
+            addDeleteButton(textBox);
+            return textBox;
+        }
+
+        function initializeImageUpload() {
+            const addImageBtn = document.querySelector('.add-image-btn');
+            const imageInput = document.querySelector('.image-upload-input');
+
+            addImageBtn.addEventListener('click', () => {
+                imageInput.click();
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        const imageUrl = event.target.result;
+                        
+                        const imageBox = document.createElement('div');
+                        imageBox.className = 'text-box image-box';
+                        imageBox.style.position = 'absolute';
+                        imageBox.style.left = '50%';
+                        imageBox.style.top = '50%';
+                        imageBox.style.transform = 'translate(-50%, -50%)';
+                        imageBox.style.cursor = 'move';
+                        
+                        imageBox.innerHTML = `
+                            <div class="handle left"></div>
+                            <div class="handle right"></div>
+                            <div class="resize-handle"></div>
+                            <img src="${imageUrl}" alt="Uploaded image" style="width: 200px;">
+                        `;
+                        
+                        addDeleteButton(imageBox);
+                        
+                        const pageContent = document.querySelector('.page-content');
+                        if (pageContent) {
+                            pageContent.appendChild(imageBox);
+                            makeTextBoxDraggable(imageBox);
+                            
+                            saveSlideState();
+                            if (window.undoRedoManager) {
+                                undoRedoManager.saveState();
+                            }
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+                
+                imageInput.value = '';
+            });
+        }
+
+        // Update the add page functionality to include delete button for initial text box
+        document.getElementById('addPage').addEventListener('click', function() {
+            const pageList = document.querySelector('.page-list');
+            const pageCount = pageList.children.length;
+            const newPageIndex = pageCount + 1;
+            
+            const pageItem = document.createElement('div');
+            pageItem.className = 'page-item';
+            pageItem.dataset.slideIndex = newPageIndex - 1;
+            pageItem.textContent = `Slide ${newPageIndex}`;
+            
+            const newPageContent = document.createElement('div');
+            newPageContent.className = 'page-content';
+            newPageContent.style.display = 'none';
+            document.querySelector('.editor').appendChild(newPageContent);
+            
+            const textBox = addNewTextBox();
+            newPageContent.appendChild(textBox);
+            makeTextBoxDraggable(textBox);
+            
+            pageList.appendChild(pageItem);
+            
+            slideElements.set(newPageIndex - 1, []);
+            
+            pageItem.addEventListener('click', function() {
+                switchToSlide(parseInt(this.dataset.slideIndex));
+            });
+            
+            switchToSlide(newPageIndex - 1);
+            
+            history.saveState();
+        });
+
+        // Add delete buttons to existing text boxes and images
+        document.addEventListener('DOMContentLoaded', function() {
+            document.querySelectorAll('.text-box').forEach(element => {
+                if (!element.querySelector('.delete-btn')) {
+                    addDeleteButton(element);
+                }
+            });
+            initializeImageUpload();
+        });
+
+        // Function to update slide preview
+        function updateSlidePreview(slideIndex) {
+            const pageContent = document.querySelector('.page-content');
+            const pageItems = document.querySelectorAll('.page-item');
+            const currentPageItem = pageItems[slideIndex];
+            
+            if (!currentPageItem || !pageContent) return;
+
+            // Create a clone of the page content
+            const tempContainer = document.createElement('div');
+            tempContainer.innerHTML = pageContent.innerHTML;
+            
+            // Create a canvas to render the preview
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size to match the preview dimensions
+            canvas.width = 150;  // Match the preview image width
+            canvas.height = 200; // Match the preview image height
+            
+            // Draw background gradient
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#f3d367');
+            gradient.addColorStop(1, '#90a955');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Scale content to fit preview
+            const scale = Math.min(canvas.width / pageContent.offsetWidth, canvas.height / pageContent.offsetHeight);
+            
+            // Draw text boxes and images
+            tempContainer.querySelectorAll('.text-box').forEach(textBox => {
+                const rect = textBox.getBoundingClientRect();
+                const parentRect = pageContent.getBoundingClientRect();
+                
+                // Calculate relative position
+                const relativeX = (rect.left - parentRect.left) * scale;
+                const relativeY = (rect.top - parentRect.top) * scale;
+                const width = rect.width * scale;
+                const height = rect.height * scale;
+                
+                // Draw text or image
+                if (textBox.classList.contains('image-box')) {
+                    const img = textBox.querySelector('img');
+                    if (img) {
+                        ctx.drawImage(img, relativeX, relativeY, width, height);
+                    }
+                } else {
+                    const p = textBox.querySelector('p');
+                    if (p) {
+                        ctx.font = `${parseFloat(window.getComputedStyle(p).fontSize) * scale}px ${window.getComputedStyle(p).fontFamily}`;
+                        ctx.fillStyle = window.getComputedStyle(p).color;
+                        ctx.fillText(p.textContent, relativeX, relativeY + height);
+                    }
+                }
+            });
+            
+            // Update the preview image
+            const previewImg = currentPageItem.querySelector('img');
+            if (previewImg) {
+                previewImg.src = canvas.toDataURL();
+            }
+        }
+
+        // Update the saveSlideState function to include preview update
+        function saveSlideState() {
+            // Save current slide's elements
+            const pageContent = document.querySelector('.page-content');
+            if (pageContent) {
+                const elements = Array.from(pageContent.children).map(el => el.cloneNode(true));
+                slideElements.set(currentSlideIndex, elements);
+                
+                // Update the preview
+                updateSlidePreview(currentSlideIndex);
+            }
+        }
+
+        // Add preview update to text editing
+        document.addEventListener('input', (e) => {
+            const textBox = e.target.closest('.text-box');
+            if (textBox && e.target.tagName === 'P') {
+                saveSlideState();
+                if (window.undoRedoManager) {
+                    undoRedoManager.saveState();
+                }
+                updateSlidePreview(currentSlideIndex);
+            }
+        });
+
+    
+        function updateDragHandlers() {
+            document.addEventListener('mouseup', (e) => {
+                const textBox = e.target.closest('.text-box');
+                if (textBox) {
+                    saveSlideState();
+                    updateSlidePreview(currentSlideIndex);
+                }
+            });
+        }
+
+        function initializeImageUpload() {
+            const addImageBtn = document.querySelector('.add-image-btn');
+            const imageInput = document.querySelector('.image-upload-input');
+
+            addImageBtn.addEventListener('click', () => {
+                imageInput.click();
+            });
+
+            imageInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(event) {
+                        const imageUrl = event.target.result;
+                        
+                        const imageBox = document.createElement('div');
+                        imageBox.className = 'text-box image-box';
+                        imageBox.style.position = 'absolute';
+                        imageBox.style.left = '50%';
+                        imageBox.style.top = '50%';
+                        imageBox.style.transform = 'translate(-50%, -50%)';
+                        imageBox.style.cursor = 'move';
+                        
+                        imageBox.innerHTML = `
+                            <div class="handle left"></div>
+                            <div class="handle right"></div>
+                            <div class="resize-handle"></div>
+                            <img src="${imageUrl}" alt="Uploaded image" style="width: 200px;">
+                        `;
+                        
+                        addDeleteButton(imageBox);
+                        
+                        const pageContent = document.querySelector('.page-content');
+                        if (pageContent) {
+                            pageContent.appendChild(imageBox);
+                            makeTextBoxDraggable(imageBox);
+                            
+                            saveSlideState();
+                            updateSlidePreview(currentSlideIndex);
+                            if (window.undoRedoManager) {
+                                undoRedoManager.saveState();
+                            }
+                        }
+                    };
+                    
+                    reader.readAsDataURL(file);
+                }
+                
+                imageInput.value = '';
+            });
+        }
+
+  
+        document.addEventListener('DOMContentLoaded', () => {
+      
+            const fontFamily = document.getElementById('fontFamily');
+            if (fontFamily) {
+                fontFamily.addEventListener('change', () => {
+                    saveSlideState();
+                    updateSlidePreview(currentSlideIndex);
+                });
+            }
+
+            
+            const fontSize = document.getElementById('fontSize');
+            if (fontSize) {
+                fontSize.addEventListener('input', () => {
+                    saveSlideState();
+                    updateSlidePreview(currentSlideIndex);
+                });
+            }
+
+            
+            const colorBtns = document.querySelectorAll('.color-btn');
+            colorBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    saveSlideState();
+                    updateSlidePreview(currentSlideIndex);
+                });
+            });
+
+   
+            const alignBtns = document.querySelectorAll('.align-btn');
+            alignBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    saveSlideState();
+                    updateSlidePreview(currentSlideIndex);
+                });
+            });
+
+  
+            const lineHeightBtns = document.querySelectorAll('.line-height-btn');
+            lineHeightBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    saveSlideState();
+                    updateSlidePreview(currentSlideIndex);
+                });
+            });
+        });
+
+      
+        const originalSwitchToSlide = window.switchToSlide;
+        window.switchToSlide = function(index) {
+            originalSwitchToSlide(index);
+            updateSlidePreview(index);
+        };
+
+                function setupAddSlideButton() {
+            const oldButton = document.querySelector('.customize-btn');
+            const newButton = oldButton.cloneNode(true);
+            oldButton.parentNode.replaceChild(newButton, oldButton);
+            
+            let isProcessing = false;
+            
+            newButton.addEventListener('click', function(e) {
+                if (isProcessing) return;
+                isProcessing = true;
+                
+                try {
+                    const pageList = document.querySelector('.page-list');
+                    const pageCount = pageList.children.length + 1;
+                    
+                    const pageItem = document.createElement('div');
+                    pageItem.className = 'page-item';
+                    pageItem.dataset.slideIndex = pageCount - 1;
+                    pageItem.innerHTML = `
+                        <img src="https://via.placeholder.com/150x200" alt="Page ${pageCount}">
+                        <p>Page ${pageCount}</p>
+                    `;
+                    
+                    pageList.appendChild(pageItem);
+                    
+                    slideElements.set(pageCount - 1, []);
+                    
+                    pageItem.addEventListener('click', function() {
+                        switchToSlide(parseInt(this.dataset.slideIndex));
+                    });
+                    
+                    switchToSlide(pageCount - 1);
+                    updateSlidePreview(pageCount - 1);
+                    
+                    history.saveState();
+                    
+                } finally {
+                    setTimeout(() => {
+                        isProcessing = false;
+                    }, 500);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
